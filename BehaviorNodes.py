@@ -28,13 +28,14 @@ class Node():
         # ticked again. Previous sibling, which returned SUCCESS already, are not ticked again.
 
 class Condition(Node):
-    def __init__(self, func):
+    def __init__(self, func, args):
         self.state = s.STANDBY
         self.condition = func # Higher order function to check T/F condition
+        self.args = args
 
     def tick(self):
         self.state = s.RUNNING
-        if self.condition(): return s.SUCCESS
+        if self.condition(self.args): return s.SUCCESS
         else: return s.FAILURE
 
 class Action(Node):
@@ -70,12 +71,15 @@ class Sequence(Node):
         print("Sequnce was ticked!")
         return s.SUCCESS
 
-testNode = Node()
-testSequence = Sequence()
-anotherSequence = Sequence()
-testSequence.children = [testNode, testNode, testNode, anotherSequence]
+# testNode = Node()
+# testSequence = Sequence()
+# anotherSequence = Sequence()
+# testSequence.children = [testNode, testNode, testNode, anotherSequence]
 
-testSequence.tick()
+# testSequence.tick()
+
+
+
 
 
 
