@@ -27,6 +27,27 @@ class Node():
         # "Tick again" means that the next time the sequence is ticked, the same child is 
         # ticked again. Previous sibling, which returned SUCCESS already, are not ticked again.
 
+class Condition(Node):
+    def __init__(self, func):
+        self.state = s.STANDBY
+        self.condition = func # Higher order function to check T/F condition
+
+    def tick(self):
+        self.state = s.RUNNING
+        if self.condition(): return s.SUCCESS
+        else: return s.FAILURE
+
+class Action(Node):
+    def __init__(self, func, args):
+        self.state = s.STANDBY
+        self.do = func # Higher order function to do action
+        self.args = args # List of args for action
+
+    def tick(self):
+        self.state = s.RUNNING
+        if self.do(self.args): return s.SUCCESS
+        else: return s.FAILURE
+
 class Sequence(Node):
     def __init__(self):
         self.cIdx = 0 #Keeps track of which child is being ticked
