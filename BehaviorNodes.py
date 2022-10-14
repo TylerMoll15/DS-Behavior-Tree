@@ -30,7 +30,7 @@ class Node(ABC):
         # ticked again. Previous sibling, which returned SUCCESS already, are not ticked again.
 
 class Condition(Node):
-    def __init__(self, func, args):
+    def __init__(self, func, args=[]):
         self.state = s.STANDBY
         self.condition = func # Higher order function to check T/F condition
         self.args = args
@@ -41,27 +41,28 @@ class Condition(Node):
         else: return s.FAILURE
 
 class Action(Node):
-    def __init__(self, func, args):
+    def __init__(self, func, args=[]):
         self.state = s.STANDBY
         self.do = func # Higher order function to do action
         self.args = args # List of args for action
 
     def tick(self):
         self.state = s.RUNNING
-        if self.do(self.args): return s.SUCCESS
+
+        if self.args and self.do(self.args): return s.SUCCESS
+        elif self.do(): return s.SUCCESS
         else: return s.FAILURE
 
 class Sequence(Node):
     def __init__(self):
+        super().__init__()
         self.cIdx = 0 #Keeps track of which child is being ticked
-        self.state = s.STANDBY
 
     def tick(self):
         self.state = s.RUNNING
 
         while self.cIdx < len(self.children):
             cStatus = self.children[self.cIdx].tick()
-            
             if(cStatus == s.SUCCESS): self.cIdx+=1
             elif (cStatus == s.RUNNING): return s.RUNNING
             elif cStatus == s.FAILURE:
@@ -76,8 +77,7 @@ class Sequence(Node):
 
 class Fallback(Node):
     def __init__(self):
-        self.state = s.STANDBY
-        self.children: list[Node] = []
+        super().__init__()
     
     def tick(self):
         for child in self.children:
@@ -87,6 +87,28 @@ class Fallback(Node):
             elif cStatus == s.SUCCESS:
                 return s.SUCCESS
         return s.FAILURE
+
+# TEST FOR SEQUENCE, CONDITION, AND ACTION NODES
+
+x = 0
+y = 0
+
+seq = Sequence()
+def conditionXGreaterThan3(x):
+    return x[0] > 3
+def actionSetYto1():
+    global y
+    y = 1
+    return 1
+cond = Condition(conditionXGreaterThan3, [x])
+action = Action(actionSetYto1)
+seq.children = [cond, action]
+
+for i in range(5):
+    seq.tick()
+    cond.args[0] += 1
+
+print(x, y)
 
 
 
