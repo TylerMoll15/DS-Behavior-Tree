@@ -86,15 +86,6 @@ class Fallback(Node):
                 return s.SUCCESS
         return s.FAILURE
 
-# testNode = Node()
-# testSequence = Sequence
-# anotherSequence = Sequence()
-# testSequence.children = [testNode, testNode, testNode, anotherSequence]
-
-# print(testSequence.state)
-
-
-
 
 
 
