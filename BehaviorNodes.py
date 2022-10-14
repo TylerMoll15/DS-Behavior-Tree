@@ -52,6 +52,7 @@ class Action(Node):
 class Sequence(Node):
     def __init__(self):
         self.cIdx = 0 #Keeps track of which child is being ticked
+        self.state = s.STANDBY
 
     def tick(self):
         self.state = s.RUNNING
@@ -68,15 +69,29 @@ class Sequence(Node):
                 print("Oh no, there was a failure. Terminating...")
                 return s.FAILURE
 
-        print("Sequnce was ticked!")
+        print("Sequence was ticked!")
         return s.SUCCESS
 
+class Fallback(Node):
+    def __init__(self):
+        self.state = s.STANDBY
+        self.children: list[Node] = []
+    
+    def tick(self):
+        for child in self.children:
+            cStatus = child.tick()
+            if child.state == s.RUNNING:
+                return s.RUNNING
+            elif cStatus == s.SUCCESS:
+                return s.SUCCESS
+        return s.FAILURE
+
 # testNode = Node()
-# testSequence = Sequence()
+# testSequence = Sequence
 # anotherSequence = Sequence()
 # testSequence.children = [testNode, testNode, testNode, anotherSequence]
 
-# testSequence.tick()
+# print(testSequence.state)
 
 
 
