@@ -1,4 +1,5 @@
 from enum import Enum, unique
+from abc import ABC, abstractmethod
 
 @unique
 class s(Enum):
@@ -10,17 +11,19 @@ class s(Enum):
 class BehaviorTree():
     def __init__(self):
         self.root = Node()
+        self.children: list[Node] = []
 
-class Node():
+class Node(ABC):
     def __init__(self):
         self.state: s = s.STANDBY
         self.children: list[Node] = []
     
     def tick(self) -> s:
-        self.state = s.RUNNING
+        pass
+        # self.state = s.RUNNING
 
-        print("Node was ticked!")
-        return s.FAILURE
+        # print("Node was ticked!")
+        # return s.FAILURE
         # Then do more stuff, (will be specified in child nodes)
 
         # Not sure I understand this, may be important but im ignoring it for now
