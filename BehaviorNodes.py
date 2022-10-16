@@ -82,6 +82,23 @@ class Sequence(Node):
         self.cIdx = 0 # Reset node counter upon success
         return s.SUCCESS
 
+class SequenceStar(Node):
+    def __init__(self):
+        super().__init__()
+        self.cIdx = 0 #Keeps track of which child is being ticked
+
+    def tick(self):
+        self.state = s.RUNNING
+
+        while self.cIdx < len(self.children):
+            cStatus = self.children[self.cIdx].tick()
+            if(cStatus == s.SUCCESS): self.cIdx+=1
+            else: return cStatus
+
+        if verbose: print("Sequence was successful!")
+        self.cIdx = 0 # Reset node counter upon success
+        return s.SUCCESS
+
 class Fallback(Node):
     def __init__(self):
         super().__init__()
@@ -165,6 +182,25 @@ class RetryNode(Decorator):
             elif cState == s.RUNNING: return s.RUNNING
 
         return s.FAILURE
+
+# SEQUENCE STAR TEST
+
+# x = 1
+
+# def goto1():
+#     return 1 if x >= 1 else 0
+
+# def goto2():
+#     return 1 if x >= 2 else 0
+
+# def goto3():
+#     return 1 if x >= 3 else 0
+
+# seqStar = SequenceStar()
+# seqStar.children = [Action(goto1), Action(goto2), Action(goto3)]
+# for i in range(3):
+#     print(seqStar.tick())
+#     x += 1
 
 # RETRY NODE TEST
 
