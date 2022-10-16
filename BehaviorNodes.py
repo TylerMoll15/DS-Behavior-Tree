@@ -79,6 +79,7 @@ class Sequence(Node):
                 return s.FAILURE
 
         if verbose: print("Sequence was successful!")
+        self.cIdx = 0 # Reset node counter upon success
         return s.SUCCESS
 
 class Fallback(Node):
@@ -135,18 +136,83 @@ class ForceFailureNode(Decorator):
         if cState == s.RUNNING: return s.RUNNING
         else: return s.FAILURE
 
+class RepeatNode(Decorator):
+    def __init__(self, child, n): # I think child should be a requred parameter for decorator nodes. No reason to ever have a decorator node with no child.
+        super().__init__(child)
+        self.n = n
+
+    def tick(self):
+        self.state = s.RUNNING
+
+        for i in range(self.n):
+            cState = self.children.tick()
+            if cState == s.FAILURE: return s.FAILURE
+            elif cState == s.RUNNING: return s.RUNNING
+
+        return s.SUCCESS
+
+class RetryNode(Decorator):
+    def __init__(self, child, n): 
+        super().__init__(child)
+        self.n = n
+
+    def tick(self):
+        self.state = s.RUNNING
+
+        for i in range(self.n):
+            cState = self.children.tick()
+            if cState == s.SUCCESS: return s.SUCCESS
+            elif cState == s.RUNNING: return s.RUNNING
+
+        return s.FAILURE
+
+# RETRY NODE TEST
+
+# def conditionXGreaterThan3(x):
+#     return x[0] > 3
+
+
+# cond = Condition(conditionXGreaterThan3, [0])
+# def incX():
+#     global cond
+#     cond.args[0] += 1
+#     return 1
+
+# action = Action(incX)
+# seq = Sequence()
+# seq.children = [action, cond]
+# retry = RetryNode(seq, 3)
+# print(retry.tick())
+
+# REPEAT NODE TEST
+
+# def conditionXLessThan3(x):
+#     return x[0] < 3
+
+
+# cond = Condition(conditionXLessThan3, [0])
+# def incX():
+#     global cond
+#     cond.args[0] += 1
+#     return 1
+
+# action = Action(incX)
+# seq = Sequence()
+# seq.children = [action, cond]
+# repeat = RepeatNode(seq, 2)
+# print(repeat.tick())
 
 # TEST FOR SEQUENCE, CONDITION, AND ACTION NODES
 
-x = 0
-y = 0
+# x = 0
+# y = 0
 
-def conditionXGreaterThan3(x):
-    return x[0] > 3
-def actionSetYto1():
-    global y
-    y = 1
-    return 1
+# def conditionXGreaterThan3(x):
+#     return x[0] > 3
+# def actionSetYto1():
+#     global y
+#     y = 1
+#     return 1
 
 # seq = Sequence()
 # cond = Condition(conditionXGreaterThan3, [x])
