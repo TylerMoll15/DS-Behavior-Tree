@@ -11,9 +11,9 @@ class s(Enum):
     STANDBY = 4 # in none of the other states, hasn't been ticked
 
 class Node(ABC):
-    def __init__(self):
+    def __init__(self, children):
         self.state: s = s.STANDBY
-        self.children: list[Node] = []
+        self.children: list[Node] = children
     
     def tick(self) -> s:
         pass
@@ -60,8 +60,8 @@ class Action(Node):
 
 # OTHER NODES
 class Sequence(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, children):
+        super().__init__(children)
         self.cIdx = 0 #Keeps track of which child is being ticked
 
     def tick(self):
@@ -83,8 +83,8 @@ class Sequence(Node):
         return s.SUCCESS
 
 class SequenceStar(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, children):
+        super().__init__(children)
         self.cIdx = 0 #Keeps track of which child is being ticked
 
     def tick(self):
@@ -100,8 +100,8 @@ class SequenceStar(Node):
         return s.SUCCESS
 
 class Fallback(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, children):
+        super().__init__(children)
     
     def tick(self):
         self.state = s.RUNNING
@@ -116,7 +116,7 @@ class Fallback(Node):
 
 class Decorator(Node):
     def __init__(self, child: Node = None):
-        super().__init__()
+        super().__init__(child)
         self.children: Node = child # Only 1 child allowed
 
 class InverterNode(Decorator):
@@ -196,8 +196,7 @@ class RetryNode(Decorator):
 # def goto3():
 #     return 1 if x >= 3 else 0
 
-# seqStar = SequenceStar()
-# seqStar.children = [Action(goto1), Action(goto2), Action(goto3)]
+# seqStar = SequenceStar([Action(goto1), Action(goto2), Action(goto3)])
 # for i in range(3):
 #     print(seqStar.tick())
 #     x += 1
@@ -215,8 +214,7 @@ class RetryNode(Decorator):
 #     return 1
 
 # action = Action(incX)
-# seq = Sequence()
-# seq.children = [action, cond]
+# seq = Sequence([action, cond])
 # retry = RetryNode(seq, 3)
 # print(retry.tick())
 
@@ -233,8 +231,7 @@ class RetryNode(Decorator):
 #     return 1
 
 # action = Action(incX)
-# seq = Sequence()
-# seq.children = [action, cond]
+# seq = Sequence([action, cond])
 # repeat = RepeatNode(seq, 2)
 # print(repeat.tick())
 
