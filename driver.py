@@ -47,14 +47,18 @@ class Environment():
             elif type == "v": self.obstacleCoords.append([wallStart[xInd], wallStart[yInd] + i])
 
 class Agent():
-    def __init__(self, environment: Environment) -> None:
+    def __init__(self, environment: Environment, start) -> None:
         self.e = environment
-        self.loc = self.findStart()
+        self.loc = self.findStart(start)
         self.atEnd = False
         self.visitedLocations = [[]]
         self.actions = ["Up", "Down", "Left", "Right"]
     
-    def findStart(self):
+    def findStart(self, start = None):
+        # breakpoint()
+
+        if start: return start
+
         randStart = randXY(self.e.dimension)
         while (randStart in self.e.obstacleCoords or randStart[yInd] > (self.e.dimension / 2)):
             randStart = randXY(self.e.dimension)
@@ -73,9 +77,6 @@ class Agent():
         elif action == "Down": newState = [self.loc[xInd], self.loc[yInd] + 1] 
         elif action == "Left": newState = [self.loc[xInd] - 1, self.loc[yInd]] 
         elif action == "Right": newState = [self.loc[xInd] + 1, self.loc[yInd]] 
-        
-        if force: 
-            breakpoint()
 
         canMoveBool = self.canMove(newState, force)
         self.loc = newState if canMoveBool else self.loc
@@ -83,6 +84,26 @@ class Agent():
 
         if self.loc == self.e.rewardLoc: self.atEnd = True
         return canMoveBool
+    
+    def result(self, action):
+        if action == "Up": newState = [self.loc[xInd], self.loc[yInd] - 1] 
+        elif action == "Down": newState = [self.loc[xInd], self.loc[yInd] + 1] 
+        elif action == "Left": newState = [self.loc[xInd] - 1, self.loc[yInd]] 
+        elif action == "Right": newState = [self.loc[xInd] + 1, self.loc[yInd]] 
+        return newState
+    
+    def fewestVisitsAction(self): 
+        leastTimes = 1000000
+        leastAction = "Not an Action"
+        for a in self.actions:
+            if (self.visitedLocations.count(self.result(a)) < leastTimes) and self.result(a) not in self.e.obstacleCoords and self.result(a) in self.e.validCoords:
+                leastAction = a
+                leastTimes = self.visitedLocations.count(self.result(a))
+        
+        return leastAction
+
+        
+
 
     def printEnv(self):
         for y in range(self.e.dimension):
@@ -119,31 +140,19 @@ class Agent():
     def randAction(self):
         rand = np.random.randint(0, len(testagent.actions))
         return self.actions[rand]
-    
-    
 
-
-testenv = Environment()
+testenv = Environment(5, 0)
 testenv.placeWall(3, "h", [2,2])
-testagent = Agent(testenv)
-testagent.printEnv()
-# stuckInLoop = Sequence([Condition(testagent.multipleVisits, testagent.loc), Fallback([Sequence([Condition(testagent.wallBelowLeft), Action(testagent.move, "Left")]), Sequence([Condition(testagent.wallBelowRight), Action(testagent.move, "Right")])])])
-# obsBelow = Sequence([Condition(testagent.wallBelow), Action(testagent.move, "Left")])
-# obsLeft = Sequence([Condition(testagent.wallLeft), Sequence([InverterNode(Condition(testagent.wallRight)), Fallback([Action(testagent.move, "Down"), Action(testagent.move, "Up")])])])
-# obsRight = Sequence([Condition(testagent.wallRight), Fallback([Action(testagent.move, "Down"), Action(testagent.move, "Up")])])
-# obsActions = Fallback([obsBelow, obsLeft, obsRight])
+testenv.placeWall(1, "h", [2,4])
+testenv.placeWall(1, "h", [3,1])
+testenv.placeWall(1, "h", [0,4])
 
-# mainFallback = Fallback([RepeatNode(Action(testagent.move, "Down"), 2),RepeatNode(Action(testagent.move, "Right"), 2), RepeatNode(Action(testagent.move, "Up"), 2), RepeatNode(Action(testagent.move, "Left"), 2)])
-# mainFallback = Fallback([stuckInLoop, obsActions, Action(testagent.move, "Down"), Action(testagent.move, "Right")])
-backup = Fallback([Action(testagent.move, ["Down", True]), Action(testagent.move, ["Right", True]), Action(testagent.move, ["Left", True]), Action(testagent.move, ["Up", True])])
+testagent = Agent(testenv, [4,1])
+backup = Action(testagent.move, [testagent.fewestVisitsAction(), True])
 mainFallback = Fallback([Action(testagent.move, ["Down", False]), Action(testagent.move, ["Right", False]), Action(testagent.move, ["Left", False]), Action(testagent.move, ["Up", False]), backup])
 bt = BehaviorTree(mainFallback)
 
 while testagent.loc != testenv.rewardLoc:
-    # breakpoint()
-    bt.tick()
     testagent.printEnv()
-
-
-
-# testTree = BehaviorTree()
+    bt.tick()
+testagent.printEnv()
