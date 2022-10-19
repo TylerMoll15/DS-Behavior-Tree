@@ -37,6 +37,7 @@ class Condition(Node):
         self.args = args
 
     def tick(self):
+        # breakpoint()
         self.state = s.RUNNING
         if self.args:
             if self.condition(self.args):
