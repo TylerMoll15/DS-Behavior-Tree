@@ -60,17 +60,24 @@ class Agent():
             randStart = randXY(self.e.dimension)
         return randStart
     
-    def canMove(self, newState):
-            if newState in self.e.obstacleCoords or newState not in self.e.validCoords: return False
-            else: return True
+    def canMove(self, newState, force = False):
+        visitedForce = not force if force else newState in self.visitedLocations
+
+        if newState in self.e.obstacleCoords or newState not in self.e.validCoords or visitedForce: return False
+        else: return True
     
-    def move(self, action):
+    def move(self, actionForce = []):
+        action, force = actionForce
+
         if action == "Up": newState = [self.loc[xInd], self.loc[yInd] - 1] 
         elif action == "Down": newState = [self.loc[xInd], self.loc[yInd] + 1] 
         elif action == "Left": newState = [self.loc[xInd] - 1, self.loc[yInd]] 
         elif action == "Right": newState = [self.loc[xInd] + 1, self.loc[yInd]] 
         
-        canMoveBool = self.canMove(newState)
+        if force: 
+            breakpoint()
+
+        canMoveBool = self.canMove(newState, force)
         self.loc = newState if canMoveBool else self.loc
         self.visitedLocations.append(self.loc)
 
@@ -105,7 +112,7 @@ class Agent():
     
     def multipleVisits(self, coords = None):
         if self.visitedLocations.count(coords) > 5:
-             breakpoint()
+            #  breakpoint()
              return True
         return False
 
@@ -120,14 +127,16 @@ testenv = Environment()
 testenv.placeWall(3, "h", [2,2])
 testagent = Agent(testenv)
 testagent.printEnv()
-stuckInLoop = Sequence([Condition(testagent.multipleVisits, testagent.loc), Fallback([Sequence([Condition(testagent.wallBelowLeft), Action(testagent.move, "Left")]), Sequence([Condition(testagent.wallBelowRight), Action(testagent.move, "Right")])])])
-obsBelow = Sequence([Condition(testagent.wallBelow), Action(testagent.move, "Left")])
-obsLeft = Sequence([Condition(testagent.wallLeft), Sequence([InverterNode(Condition(testagent.wallRight)), Fallback([Action(testagent.move, "Down"), Action(testagent.move, "Up")])])])
-obsRight = Sequence([Condition(testagent.wallRight), Fallback([Action(testagent.move, "Down"), Action(testagent.move, "Up")])])
-obsActions = Fallback([obsBelow, obsLeft, obsRight])
+# stuckInLoop = Sequence([Condition(testagent.multipleVisits, testagent.loc), Fallback([Sequence([Condition(testagent.wallBelowLeft), Action(testagent.move, "Left")]), Sequence([Condition(testagent.wallBelowRight), Action(testagent.move, "Right")])])])
+# obsBelow = Sequence([Condition(testagent.wallBelow), Action(testagent.move, "Left")])
+# obsLeft = Sequence([Condition(testagent.wallLeft), Sequence([InverterNode(Condition(testagent.wallRight)), Fallback([Action(testagent.move, "Down"), Action(testagent.move, "Up")])])])
+# obsRight = Sequence([Condition(testagent.wallRight), Fallback([Action(testagent.move, "Down"), Action(testagent.move, "Up")])])
+# obsActions = Fallback([obsBelow, obsLeft, obsRight])
 
 # mainFallback = Fallback([RepeatNode(Action(testagent.move, "Down"), 2),RepeatNode(Action(testagent.move, "Right"), 2), RepeatNode(Action(testagent.move, "Up"), 2), RepeatNode(Action(testagent.move, "Left"), 2)])
-mainFallback = Fallback([stuckInLoop, obsActions, Action(testagent.move, "Down"), Action(testagent.move, "Right")])
+# mainFallback = Fallback([stuckInLoop, obsActions, Action(testagent.move, "Down"), Action(testagent.move, "Right")])
+backup = Fallback([Action(testagent.move, ["Down", True]), Action(testagent.move, ["Right", True]), Action(testagent.move, ["Left", True]), Action(testagent.move, ["Up", True])])
+mainFallback = Fallback([Action(testagent.move, ["Down", False]), Action(testagent.move, ["Right", False]), Action(testagent.move, ["Left", False]), Action(testagent.move, ["Up", False]), backup])
 bt = BehaviorTree(mainFallback)
 
 while testagent.loc != testenv.rewardLoc:
