@@ -38,12 +38,15 @@ class Condition(Node):
 
     def tick(self):
         self.state = s.RUNNING
-        if self.condition(self.args): 
-            if verbose: print("Condition True!")
+        if self.args:
+            if self.condition(self.args):
+                if verbose: print("Condition True!")
+                return s.SUCCESS
+        elif self.condition():
             return s.SUCCESS
-        else: 
-            if verbose: print("Condition false! :(")
-            return s.FAILURE
+
+        if verbose: print("Condition false! :(")
+        return s.FAILURE
 
 class Action(Node):
     def __init__(self, func, args= []):
@@ -54,9 +57,10 @@ class Action(Node):
     def tick(self):
         self.state = s.RUNNING
         # breakpoint()
-        if self.args and self.do(self.args): return s.SUCCESS
+        if self.args:
+            if self.do(self.args): return s.SUCCESS
         elif self.do(): return s.SUCCESS
-        else: return s.FAILURE
+        return s.FAILURE
 
 # OTHER NODES
 class Sequence(Node):
